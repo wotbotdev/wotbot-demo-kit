@@ -60,6 +60,29 @@ test("tool definitions, system instructions and model options affect matching", 
   }
 });
 
+test("WoTBot's panel retry wording update keeps recorded requests replayable", () => {
+  const recorded = request();
+  recorded.tools = [{ type: "function", function: {
+    name: "create_web_interface",
+    description: [
+      "Each panel gets an initial attempt and at most TWO repair attempts in this",
+      "    user turn, across static, data and browser failures. Create panels one at a",
+      "    time. Respect retry_allowed in the result: false means stop and explain the",
+    ].join("\n"),
+  } }];
+  const current = structuredClone(recorded);
+  current.tools[0].function.description = [
+    "Each panel gets an initial attempt and a limited number of repair attempts",
+    "    (max_repairs in the result) in this user turn, across static, data and",
+    "    browser failures. Create panels one at a time. Respect retry_allowed in the result: false means stop and explain the",
+  ].join("\n");
+  const before = structuredClone(current);
+  assert.equal(addRequestContext(current)._context, addRequestContext(recorded)._context);
+  assert.deepEqual(current, before);
+  current.tools[0].function.description += " Another requirement.";
+  assert.notEqual(addRequestContext(current)._context, addRequestContext(recorded)._context);
+});
+
 test("rekeying ignores artifact checksums and sizes, but nothing else", () => {
   const artifact = (sha, size, name = "forecast.json") =>
     request(JSON.stringify({ artifact: { filename: name, size_bytes: size, sha256: sha.repeat(64) } }));

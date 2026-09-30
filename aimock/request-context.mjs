@@ -48,13 +48,45 @@ const INLINE_IMAGE = /data:image\/[\w.+-]+;base64,[A-Za-z0-9+/=]+/g;
 const ARTIFACT_SHA256 = /(\\*"sha256\\*":\s*\\*")[0-9a-f]{64}/g;
 const ARTIFACT_SIZE = /(\\*"size_bytes\\*":\s*)\d+/g;
 
+// WoTBot changed this panel-tool instruction after earlier recordings.
+// It describes the same retry contract; keep the recorded wording in the
+// matching key without changing the request forwarded to the model.
+const PANEL_REPAIR_RECORDED = [
+  "Each panel gets an initial attempt and at most TWO repair attempts in this",
+  "    user turn, across static, data and browser failures. Create panels one at a",
+  "    time. Respect retry_allowed in the result: false means stop and explain the",
+].join("\n");
+const PANEL_REPAIR_CURRENT = [
+  "Each panel gets an initial attempt and a limited number of repair attempts",
+  "    (max_repairs in the result) in this user turn, across static, data and",
+  "    browser failures. Create panels one at a time. Respect retry_allowed in the result: false means stop and explain the",
+].join("\n");
+
+function normalizeToolDescriptions(input) {
+  if (!Array.isArray(input.tools)) return input;
+  let changed = false;
+  const tools = input.tools.map((tool) => {
+    const description = tool.function?.description;
+    if (tool.function?.name !== "create_web_interface" ||
+        typeof description !== "string" || !description.includes(PANEL_REPAIR_CURRENT)) return tool;
+    changed = true;
+    return {
+      ...tool,
+      function: { ...tool.function,
+        description: description.replace(PANEL_REPAIR_CURRENT, PANEL_REPAIR_RECORDED) },
+    };
+  });
+  return changed ? { ...input, tools } : input;
+}
+
 /** The request as matched: no context tag, images, clock readings. */
 function modelInput(request) {
   return requestJson(request).replace(INLINE_IMAGE, "<image>");
 }
 
 function requestJson(request) {
-  const { _context, ...input } = request;
+  const { _context, ...rawInput } = request;
+  const input = normalizeToolDescriptions(rawInput);
   const clockCalls = new Set(
     (input.messages ?? []).flatMap((message) =>
       (message.tool_calls ?? [])

@@ -1,6 +1,6 @@
 # WoTBot demo kit
 
-Reusable runtime pieces for WoTBot demos. Version `0.1.2` contains the AI Mock
+Reusable runtime pieces for WoTBot demos. Version `0.1.3` contains the AI Mock
 adapter and read-only WoT Thing Description Directory. Each demo owns its TDs,
 participant manifest, recordings, prompts, data services, and Compose wiring.
 
@@ -30,7 +30,7 @@ multi-platform images to GHCR:
 
 The images contain the pinned public base layers and kit runtime code; demo
 fixtures, TDs, and credentials are not part of the build context. Both demos
-pin the published `0.1.2` images and pull them as needed. A sibling kit
+pin the published `0.1.3` images and pull them as needed. A sibling kit
 checkout is useful for changing shared code or rewriting recorded fixtures.
 Both Dockerfiles pin their upstream image digests for repeatable builds.
 
