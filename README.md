@@ -21,9 +21,9 @@ Build the local versioned images before starting either demo:
 make build
 ```
 
-The images have not been published to a registry. Both demos pin the local AI
-Mock and directory images. They require a sibling kit checkout and `make build`
-until these images are published.
+GitHub Actions builds and checks both images on pushes, pull requests, and
+manual runs. The demos pin locally built images and require a sibling kit
+checkout and `make build`.
 Both Dockerfiles pin their upstream image digests for repeatable builds.
 
 The shared runtime code stays in these images; each demo mounts only its own

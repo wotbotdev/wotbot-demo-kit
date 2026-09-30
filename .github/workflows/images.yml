@@ -1,0 +1,35 @@
+name: Check images
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*.*.*"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+      - name: Test AI Mock matching
+        run: node --test tests/aimock-request-context.test.mjs
+      - name: Build directory image
+        run: docker build -f directory/Dockerfile -t wotbot-demo-kit/directory:check .
+      - name: Test directory in its runtime image
+        run: >-
+          docker run --rm -v "$PWD:/work:ro" -w /work
+          --entrypoint python wotbot-demo-kit/directory:check
+          -m unittest discover -s tests -p 'test_*.py'
+      - name: Build AI Mock image
+        run: docker build -f aimock/Dockerfile -t wotbot-demo-kit/aimock:check .
+      - name: Check AI Mock entrypoint syntax
+        run: >-
+          docker run --rm --entrypoint node wotbot-demo-kit/aimock:check
+          --check /app/wotbot-aimock.mjs
