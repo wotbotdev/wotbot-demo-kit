@@ -1,0 +1,5 @@
+*
+!aimock/
+!aimock/*.mjs
+!directory/
+!directory/*.py

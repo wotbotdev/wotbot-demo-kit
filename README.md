@@ -22,8 +22,17 @@ make build
 ```
 
 GitHub Actions builds and checks both images on pushes, pull requests, and
-manual runs. The demos pin locally built images and require a sibling kit
-checkout and `make build`.
+manual runs. Pushing a `v<version>` tag matching `VERSION` also publishes
+multi-platform images to GHCR:
+
+- `ghcr.io/wotbotdev/wotbot-demo-kit-aimock:<version>`
+- `ghcr.io/wotbotdev/wotbot-demo-kit-directory:<version>`
+
+The images contain the pinned public base layers and kit runtime code; demo
+fixtures, TDs, and credentials are not part of the build context. The demos
+currently pin locally built images and require a sibling kit checkout and
+`make build`. GitHub initially makes new packages private, so anonymous pulls
+require changing package visibility after the first release.
 Both Dockerfiles pin their upstream image digests for repeatable builds.
 
 The shared runtime code stays in these images; each demo mounts only its own

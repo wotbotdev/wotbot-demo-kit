@@ -1,4 +1,4 @@
-name: Check images
+name: Check and publish images
 
 on:
   push:
@@ -33,3 +33,43 @@ jobs:
         run: >-
           docker run --rm --entrypoint node wotbot-demo-kit/aimock:check
           --check /app/wotbot-aimock.mjs
+
+  publish:
+    if: github.repository == 'wotbotdev/wotbot-demo-kit' && github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    needs: check
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - image: aimock
+            dockerfile: aimock/Dockerfile
+          - image: directory
+            dockerfile: directory/Dockerfile
+    steps:
+      - uses: actions/checkout@v6
+      - name: Check release version
+        id: version
+        run: |
+          test "v$(cat VERSION)" = "$GITHUB_REF_NAME"
+          echo "number=$(cat VERSION)" >> "$GITHUB_OUTPUT"
+      - uses: docker/setup-qemu-action@v4
+      - uses: docker/setup-buildx-action@v4
+      - name: Log in to GHCR
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build and publish
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: ${{ matrix.dockerfile }}
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ghcr.io/wotbotdev/wotbot-demo-kit-${{ matrix.image }}:${{ steps.version.outputs.number }}
+          labels: org.opencontainers.image.source=https://github.com/wotbotdev/wotbot-demo-kit
