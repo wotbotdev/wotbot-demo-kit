@@ -15,7 +15,7 @@ participant manifest, recordings, prompts, data services, and Compose wiring.
   WoTBot's `wot-tdd` provider. `manifest_directory.py` serves a participant
   selected from a demo-owned JSON manifest.
 
-Build the local versioned images before starting either demo:
+For local development, build the versioned images with:
 
 ```sh
 make build
@@ -29,10 +29,9 @@ multi-platform images to GHCR:
 - `ghcr.io/wotbotdev/wotbot-demo-kit-directory:<version>`
 
 The images contain the pinned public base layers and kit runtime code; demo
-fixtures, TDs, and credentials are not part of the build context. The demos
-currently pin locally built images and require a sibling kit checkout and
-`make build`. GitHub initially makes new packages private, so anonymous pulls
-require changing package visibility after the first release.
+fixtures, TDs, and credentials are not part of the build context. Both demos
+pin the published `0.1.2` images and pull them as needed. A sibling kit
+checkout is useful for changing shared code or rewriting recorded fixtures.
 Both Dockerfiles pin their upstream image digests for repeatable builds.
 
 The shared runtime code stays in these images; each demo mounts only its own
